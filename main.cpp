@@ -58,7 +58,7 @@ void setup() {
   pinMode(ledPin, OUTPUT);
 
   // Create the BLE Device
-  BLEDevice::init("ESP32");
+  BLEDevice::init("ESP32_Jorrit");
 
   // Create the BLE Server
   pServer = BLEDevice::createServer();
