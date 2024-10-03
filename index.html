@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -254,4 +254,171 @@
         return datetime;
     }
 </script>
+</html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP32 Web BLE App</title>
+    <style>
+        html {
+            font-family: Arial, Helvetica, sans-serif;
+            display: inline-block;
+            text-align: center;
+        }
+        h1 {
+            font-size: 1.8rem;
+            color: white;
+        }
+        .topnav {
+            overflow: hidden;
+            background-color: #0A1128;
+        }
+        body {
+            margin: 0;
+        }
+        .content {
+            padding: 50px;
+        }
+        .card-grid {
+            max-width: 800px;
+            margin: 0 auto;
+            margin-bottom: 30px;
+            display: grid;
+            grid-gap: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+        .card {
+            background-color: white;
+            box-shadow: 2px 2px 12px 1px rgba(140,140,140,.5);
+        }
+        button {
+            color: white;
+            padding: 14px 20px;
+            margin: 8px 0;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .connectButton {
+            background-color: #24af37;
+        }
+        .disconnectButton {
+            background-color: #d13a30;
+        }
+        .gray-label {
+            color: #bebebe;
+            font-size: 1rem;
+        }
+        .reading {
+            font-size: 1.8rem;
+        }
+    </style>
+</head>
+<body>
+  <h1>ESP32 Web BLE App</h1>
+  <button id="connectBleButton" class="connectButton">Connect to BLE Device</button>
+  <button id="disconnectBleButton" class="disconnectButton">Disconnect BLE Device</button>
+  <p>BLE State: <strong><span id="bleState" style="color:#d13a30;">Disconnected</span></strong></p>
+  
+  <h2>Distance Measurement</h2>
+  <p><span id="valueContainer">NaN</span> cm</p>
+  <p>Last reading: <span id="timestamp"></span></p>
+
+  <script>
+    // DOM Elements
+    const connectButton = document.getElementById('connectBleButton');
+    const disconnectButton = document.getElementById('disconnectBleButton');
+    const retrievedValue = document.getElementById('valueContainer');
+    const bleStateContainer = document.getElementById('bleState');
+    const timestampContainer = document.getElementById('timestamp');
+
+    // Define BLE Specs
+    const deviceName = 'ESP32_Jorrit';
+    const serviceUuid = '9b23de8e-d759-4327-9fd0-50935931ea09';
+    const characteristicUuid = 'a98b92ca-2453-461a-907f-9efb35623d91';
+
+    // BLE Globals
+    let bleServer = null;
+    let sensorCharacteristic = null;
+
+    // Connect Button
+    connectButton.addEventListener('click', () => {
+      if (isWebBluetoothEnabled()) {
+        connectToDevice();
+      }
+    });
+
+    // Disconnect Button
+    disconnectButton.addEventListener('click', disconnectDevice);
+
+    // Check if Web Bluetooth is enabled
+    function isWebBluetoothEnabled() {
+      if (!navigator.bluetooth) {
+        console.log("Web Bluetooth API is not available in this browser!");
+        bleStateContainer.innerHTML = "Web Bluetooth API is not available!";
+        return false;
+      }
+      return true;
+    }
+
+    // Connect to BLE Device
+    function connectToDevice() {
+      console.log('Connecting to Bluetooth Device...');
+      navigator.bluetooth.requestDevice({
+        filters: [{name: deviceName}],
+        optionalServices: [serviceUuid]
+      })
+      .then(device => {
+        console.log('Device Selected:', device.name);
+        bleStateContainer.innerHTML = 'Connected to ' + device.name;
+        bleStateContainer.style.color = "#24af37";
+        return device.gatt.connect();
+      })
+      .then(server => {
+        bleServer = server;
+        return bleServer.getPrimaryService(serviceUuid);
+      })
+      .then(service => service.getCharacteristic(characteristicUuid))
+      .then(characteristic => {
+        sensorCharacteristic = characteristic;
+        sensorCharacteristic.startNotifications();
+        sensorCharacteristic.addEventListener('characteristicvaluechanged', handleCharacteristicChange);
+      })
+      .catch(error => console.log('Error: ', error));
+    }
+
+    // Handle BLE data changes
+    function handleCharacteristicChange(event) {
+      const value = new TextDecoder().decode(event.target.value);
+      console.log("Received value: ", value);
+      retrievedValue.innerHTML = value;
+      timestampContainer.innerHTML = getDateTime();
+    }
+
+    // Disconnect BLE Device
+    function disconnectDevice() {
+      if (bleServer && bleServer.connected) {
+        bleServer.disconnect();
+        bleStateContainer.innerHTML = "Device Disconnected";
+        bleStateContainer.style.color = "#d13a30";
+      } else {
+        console.error("Bluetooth is not connected.");
+      }
+    }
+
+    function getDateTime() {
+      const currentdate = new Date();
+      const day = ("00" + currentdate.getDate()).slice(-2);
+      const month = ("00" + (currentdate.getMonth() + 1)).slice(-2);
+      const year = currentdate.getFullYear();
+      const hours = ("00" + currentdate.getHours()).slice(-2);
+      const minutes = ("00" + currentdate.getMinutes()).slice(-2);
+      const seconds = ("00" + currentdate.getSeconds()).slice(-2);
+      return day + "/" + month + "/" + year + " at " + hours + ":" + minutes + ":" + seconds;
+    }
+  </script>
+</body>
 </html>
