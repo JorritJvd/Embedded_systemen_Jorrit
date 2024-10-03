@@ -257,11 +257,11 @@
 </html> -->
 
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ESP32 Web BLE App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/png" href="">
     <style>
         html {
             font-family: Arial, Helvetica, sans-serif;
@@ -272,27 +272,12 @@
             font-size: 1.8rem;
             color: white;
         }
-        .topnav {
-            overflow: hidden;
-            background-color: #0A1128;
-        }
         body {
             margin: 0;
+            background-color: #0A1128; /* Achtergrondkleur */
         }
         .content {
             padding: 50px;
-        }
-        .card-grid {
-            max-width: 800px;
-            margin: 0 auto;
-            margin-bottom: 30px;
-            display: grid;
-            grid-gap: 2rem;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        }
-        .card {
-            background-color: white;
-            box-shadow: 2px 2px 12px 1px rgba(140,140,140,.5);
         }
         button {
             color: white;
@@ -302,123 +287,132 @@
             cursor: pointer;
             border-radius: 4px;
         }
+        .onButton {
+            background-color: #1b8a94;
+        }
+        .offButton {
+            background-color: #5f6c6d;
+        }
         .connectButton {
             background-color: #24af37;
         }
         .disconnectButton {
             background-color: #d13a30;
         }
-        .gray-label {
-            color: #bebebe;
-            font-size: 1rem;
-        }
-        .reading {
-            font-size: 1.8rem;
+        #bleState {
+            color: #d13a30;
         }
     </style>
 </head>
 <body>
-  <h1>ESP32 Web BLE App</h1>
-  <button id="connectBleButton" class="connectButton">Connect to BLE Device</button>
-  <button id="disconnectBleButton" class="disconnectButton">Disconnect BLE Device</button>
-  <p>BLE State: <strong><span id="bleState" style="color:#d13a30;">Disconnected</span></strong></p>
-  
-  <h2>Distance Measurement</h2>
-  <p><span id="valueContainer">NaN</span> cm</p>
-  <p>Last reading: <span id="timestamp"></span></p>
+    <h1>ESP32 Web BLE Application</h1>
+    <button id="connectBleButton" class="connectButton">Connect to BLE Device</button>
+    <button id="disconnectBleButton" class="disconnectButton">Disconnect BLE Device</button>
+    <p>BLE state: <strong><span id="bleState">Disconnected</span></strong></p>
+    <h2>Fetched Value</h2>
+    <p><span id="valueContainer">NaN</span></p>
+    <p>Last reading: <span id="timestamp"></span></p>
+    <h2>Control GPIO 2</h2>
+    <button id="onButton" class="onButton">ON</button>
+    <button id="offButton" class="offButton">OFF</button>
+    <p>Last value sent: <span id="valueSent"></span></p>
+    <p><a href="https://randomnerdtutorials.com/">Created by RandomNerdTutorials.com</a></p>
+    <p><a href="https://RandomNerdTutorials.com/esp32-web-bluetooth/">Read the full project here.</a></p>
 
-  <script>
-    // DOM Elements
-    const connectButton = document.getElementById('connectBleButton');
-    const disconnectButton = document.getElementById('disconnectBleButton');
-    const retrievedValue = document.getElementById('valueContainer');
-    const bleStateContainer = document.getElementById('bleState');
-    const timestampContainer = document.getElementById('timestamp');
+    <script>
+        // DOM Elements
+        const connectButton = document.getElementById('connectBleButton');
+        const disconnectButton = document.getElementById('disconnectBleButton');
+        const onButton = document.getElementById('onButton');
+        const offButton = document.getElementById('offButton');
+        const retrievedValue = document.getElementById('valueContainer');
+        const latestValueSent = document.getElementById('valueSent');
+        const bleStateContainer = document.getElementById('bleState');
+        const timestampContainer = document.getElementById('timestamp');
 
-    // Define BLE Specs
-    const deviceName = 'ESP32_Jorrit';
-    const serviceUuid = '9b23de8e-d759-4327-9fd0-50935931ea09';
-    const characteristicUuid = 'a98b92ca-2453-461a-907f-9efb35623d91';
+        // Define BLE Device Specs
+        var deviceName = 'ESP32_Jorrit';
+        var bleService = '9b23de8e-d759-4327-9fd0-50935931ea09';
+        var ledCharacteristic = 'a98b92ca-2453-461a-907f-9efb35623d91';
+        var sensorCharacteristic = 'c4fc1687-6e0c-4e59-ab8a-815d91096ed3';
 
-    // BLE Globals
-    let bleServer = null;
-    let sensorCharacteristic = null;
+        // Global Variables to Handle Bluetooth
+        var bleServer;
+        var bleServiceFound;
+        var sensorCharacteristicFound;
 
-    // Connect Button
-    connectButton.addEventListener('click', () => {
-      if (isWebBluetoothEnabled()) {
-        connectToDevice();
-      }
-    });
+        // Connect Button (search for BLE Devices only if BLE is available)
+        connectButton.addEventListener('click', (event) => {
+            if (isWebBluetoothEnabled()) {
+                connectToDevice();
+            }
+        });
 
-    // Disconnect Button
-    disconnectButton.addEventListener('click', disconnectDevice);
+        // Disconnect Button
+        disconnectButton.addEventListener('click', disconnectDevice);
 
-    // Check if Web Bluetooth is enabled
-    function isWebBluetoothEnabled() {
-      if (!navigator.bluetooth) {
-        console.log("Web Bluetooth API is not available in this browser!");
-        bleStateContainer.innerHTML = "Web Bluetooth API is not available!";
-        return false;
-      }
-      return true;
-    }
+        // Write to the ESP32 LED Characteristic
+        onButton.addEventListener('click', () => writeOnCharacteristic(1));
+        offButton.addEventListener('click', () => writeOnCharacteristic(0));
 
-    // Connect to BLE Device
-    function connectToDevice() {
-      console.log('Connecting to Bluetooth Device...');
-      navigator.bluetooth.requestDevice({
-        filters: [{name: deviceName}],
-        optionalServices: [serviceUuid]
-      })
-      .then(device => {
-        console.log('Device Selected:', device.name);
-        bleStateContainer.innerHTML = 'Connected to ' + device.name;
-        bleStateContainer.style.color = "#24af37";
-        return device.gatt.connect();
-      })
-      .then(server => {
-        bleServer = server;
-        return bleServer.getPrimaryService(serviceUuid);
-      })
-      .then(service => service.getCharacteristic(characteristicUuid))
-      .then(characteristic => {
-        sensorCharacteristic = characteristic;
-        sensorCharacteristic.startNotifications();
-        sensorCharacteristic.addEventListener('characteristicvaluechanged', handleCharacteristicChange);
-      })
-      .catch(error => console.log('Error: ', error));
-    }
+        // Check if BLE is available in your Browser
+        function isWebBluetoothEnabled() {
+            if (!navigator.bluetooth) {
+                alert('Web Bluetooth is not available in this browser. Please use a different one (Chrome, for example).');
+                return false;
+            }
+            return true;
+        }
 
-    // Handle BLE data changes
-    function handleCharacteristicChange(event) {
-      const value = new TextDecoder().decode(event.target.value);
-      console.log("Received value: ", value);
-      retrievedValue.innerHTML = value;
-      timestampContainer.innerHTML = getDateTime();
-    }
+        // Connect to BLE Device
+        async function connectToDevice() {
+            try {
+                bleServer = await navigator.bluetooth.requestDevice({
+                    filters: [{ name: deviceName }]
+                });
 
-    // Disconnect BLE Device
-    function disconnectDevice() {
-      if (bleServer && bleServer.connected) {
-        bleServer.disconnect();
-        bleStateContainer.innerHTML = "Device Disconnected";
-        bleStateContainer.style.color = "#d13a30";
-      } else {
-        console.error("Bluetooth is not connected.");
-      }
-    }
+                bleStateContainer.innerHTML = "Connected";
+                const gatt = await bleServer.gatt.connect();
+                bleServiceFound = await gatt.getPrimaryService(bleService);
+                sensorCharacteristicFound = await bleServiceFound.getCharacteristic(sensorCharacteristic);
+                sensorCharacteristicFound.startNotifications();
+                sensorCharacteristicFound.addEventListener('characteristicvaluechanged', handleCharacteristicChange);
+                console.log("Connected to BLE Device!");
+            } catch (error) {
+                console.error("Connection failed", error);
+            }
+        }
 
-    function getDateTime() {
-      const currentdate = new Date();
-      const day = ("00" + currentdate.getDate()).slice(-2);
-      const month = ("00" + (currentdate.getMonth() + 1)).slice(-2);
-      const year = currentdate.getFullYear();
-      const hours = ("00" + currentdate.getHours()).slice(-2);
-      const minutes = ("00" + currentdate.getMinutes()).slice(-2);
-      const seconds = ("00" + currentdate.getSeconds()).slice(-2);
-      return day + "/" + month + "/" + year + " at " + hours + ":" + minutes + ":" + seconds;
-    }
-  </script>
+        // Disconnect the BLE Device
+        async function disconnectDevice() {
+            if (bleServer) {
+                await bleServer.gatt.disconnect();
+                bleStateContainer.innerHTML = "Disconnected";
+                console.log("Disconnected from BLE Device!");
+            }
+        }
+
+        // Write to the LED characteristic
+        async function writeOnCharacteristic(value) {
+            const ledCharacteristicFound = await bleServiceFound.getCharacteristic(ledCharacteristic);
+            await ledCharacteristicFound.writeValue(new Uint8Array([value]));
+            latestValueSent.innerHTML = value;
+        }
+
+        // Handle BLE Notifications
+        function handleCharacteristicChange(event) {
+            const value = new TextDecoder().decode(event.target.value);
+            console.log("New value received: ", value); // Log de ontvangen waarde
+            retrievedValue.innerHTML = value; // Update de HTML met de nieuwe waarde
+            timestampContainer.innerHTML = getDateTime(); // Update de tijd
+        }
+
+        // Get Current Date and Time
+        function getDateTime() {
+            let now = new Date();
+            return now.toLocaleString();
+        }
+    </script>
 </body>
 </html>
+
