@@ -55,9 +55,9 @@ body {
 .text-container {
     position: relative; /* Zorg ervoor dat de tekst boven de achtergrond staat */
     z-index: 1; /* Zorg ervoor dat de tekst boven de achtergrond staat */
-    padding: 20px; /* Ruimte rondom de tekst */
+    padding: 40px 20px; /* Ruimte rondom de tekst, verhoog de bovenste padding voor meer ruimte */
     color: #333; /* Donkergrijs voor tekst */
-    background-color: rgba(255, 255, 255, 0.8); /* Witte achtergrond met transparantie voor leesbaarheid */
+    background-color: rgba(255, 255, 255, 0.5); /* Witte achtergrond met 50% transparantie voor leesbaarheid */
     border-radius: 4px; /* Ronde hoeken voor de achtergrond */
 }
 
