@@ -41,6 +41,10 @@ body {
     border-radius: 4px; /* Ronde hoeken voor de achtergrond */
     margin: 10px 0; /* Ruimte boven en onder */
     color: #333; /* Donkergrijs voor tekst */
+    transform: rotate(45deg); /* Draai de achtergrond 45 graden met de klok mee */
+    display: inline-block; /* Zorg ervoor dat de achtergrond goed wordt weergegeven */
+    width: 100%; /* Zorg ervoor dat het de volledige breedte van de container gebruikt */
+    height: auto; /* Automatische hoogte */
 }
 
 button {
