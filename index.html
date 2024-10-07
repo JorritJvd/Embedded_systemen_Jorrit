@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -254,4 +254,110 @@
         return datetime;
     }
 </script>
+</html> -->
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP32 Web BLE Ultrasone Sensor</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>ESP32 BLE Ultrasone Sensor</h1>
+    <div class="card">
+        <button id="connectBleButton" class="connectButton">Verbinden met BLE apparaat</button>
+        <button id="disconnectBleButton" class="disconnectButton">Verbreek BLE verbinding</button>
+        <p>BLE Status: <strong><span id="bleState" style="color:#d13a30;">Niet verbonden</span></strong></p>
+        <h2>Gemeten afstand</h2>
+        <p><span id="valueContainer">0</span> cm</p>
+        <p>Laatste meting: <span id="timestamp"></span></p>
+    </div>
+
+    <script>
+        const connectButton = document.getElementById('connectBleButton');
+        const disconnectButton = document.getElementById('disconnectBleButton');
+        const retrievedValue = document.getElementById('valueContainer');
+        const bleStateContainer = document.getElementById('bleState');
+        const timestampContainer = document.getElementById('timestamp');
+
+        var deviceName = 'ESP32_Ultrasone_Sensor'; // Naam van het BLE apparaat
+        var bleService = '9b23de8e-d759-4327-9fd0-50935931ea09'; // UUID van de service
+        var sensorCharacteristic = 'c4fc1687-6e0c-4e59-ab8a-815d91096ed3'; // UUID van de characteristic
+
+        var bleServer;
+        var sensorCharacteristicFound;
+
+        connectButton.addEventListener('click', () => {
+            if (isWebBluetoothEnabled()){
+                connectToDevice();
+            }
+        });
+
+        disconnectButton.addEventListener('click', disconnectDevice);
+
+        function isWebBluetoothEnabled() {
+            if (!navigator.bluetooth) {
+                console.log("Web Bluetooth API is niet beschikbaar in deze browser!");
+                bleStateContainer.innerHTML = "Web Bluetooth API is niet beschikbaar!";
+                return false;
+            }
+            console.log('Web Bluetooth API wordt ondersteund in deze browser.');
+            return true;
+        }
+
+        function connectToDevice() {
+            console.log('Verbinden met BLE apparaat...');
+            navigator.bluetooth.requestDevice({
+                filters: [{name: deviceName}],
+                optionalServices: [bleService]
+            })
+            .then(device => {
+                bleStateContainer.innerHTML = 'Verbonden met ' + device.name;
+                bleStateContainer.style.color = "#24af37";
+                device.addEventListener('gattservicedisconnected', onDisconnected);
+                return device.gatt.connect();
+            })
+            .then(server => {
+                bleServer = server;
+                return server.getPrimaryService(bleService);
+            })
+            .then(service => {
+                return service.getCharacteristic(sensorCharacteristic);
+            })
+            .then(characteristic => {
+                sensorCharacteristicFound = characteristic;
+                characteristic.addEventListener('characteristicvaluechanged', handleCharacteristicChange);
+                return characteristic.startNotifications();
+            })
+            .catch(error => {
+                console.error('Fout:', error);
+            });
+        }
+
+        function onDisconnected() {
+            bleStateContainer.innerHTML = 'Verbinding verbroken';
+            bleStateContainer.style.color = "#d13a30";
+            console.log('Verbinding verbroken.');
+        }
+
+        function handleCharacteristicChange(event) {
+            const value = new TextDecoder().decode(event.target.value);
+            retrievedValue.innerHTML = value;
+            timestampContainer.innerHTML = new Date().toLocaleTimeString();
+            console.log("Nieuwe waarde ontvangen: ", value);
+        }
+
+        function disconnectDevice() {
+            if (bleServer) {
+                bleServer.disconnect();
+                bleStateContainer.innerHTML = 'Verbinding verbroken';
+                bleStateContainer.style.color = "#d13a30";
+                console.log("Verbinding verbroken.");
+            }
+        }
+    </script>
+</body>
 </html>
