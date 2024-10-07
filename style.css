@@ -6,7 +6,7 @@ html {
 
 h1 {
     font-size: 2rem;
-    color: #ffffff;
+    color: #050505;
     margin-bottom: 20px;
 }
 
@@ -31,6 +31,16 @@ body {
     margin: 20px auto;
     border-radius: 8px; /* Ronde hoeken */
     max-width: 400px; /* Max breedte voor de kaart */
+    position: relative; /* Voor absolute positionering van de meetlat */
+}
+
+.value-background {
+    background-image: url('ruler.png'); /* Achtergrondafbeelding van de meetlat */
+    background-size: cover; /* Zorg ervoor dat de afbeelding de container bedekt */
+    padding: 20px; /* Ruimte rondom de tekst */
+    border-radius: 4px; /* Ronde hoeken voor de achtergrond */
+    margin: 10px 0; /* Ruimte boven en onder */
+    color: #333; /* Donkergrijs voor tekst */
 }
 
 button {
@@ -57,7 +67,6 @@ button:hover {
 
 p {
     font-size: 1.2rem;
-    color: #333; /* Donkergrijs voor tekst */
 }
 
 #bleState {
