@@ -5,18 +5,19 @@ html {
 }
 
 h1 {
-    font-size: 1.8rem;
-    color: white;
+    font-size: 2rem;
+    color: #ffffff;
+    margin-bottom: 20px;
 }
 
 .topnav {
     overflow: hidden;
-    background-color: #0A1128;
+    background-color: #003366; /* Donkerblauw */
 }
 
 body {
     margin: 0;
-    background-color: #f3f3f3;
+    background-color: #e6f2ff; /* Lichtblauw */
 }
 
 .content {
@@ -25,9 +26,11 @@ body {
 
 .card {
     background-color: white;
-    box-shadow: 2px 2px 12px 1px rgba(140, 140, 140, .5);
-    padding: 20px;
-    margin: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    margin: 20px auto;
+    border-radius: 8px; /* Ronde hoeken */
+    max-width: 400px; /* Max breedte voor de kaart */
 }
 
 button {
@@ -37,16 +40,26 @@ button {
     border: none;
     cursor: pointer;
     border-radius: 4px;
+    transition: background-color 0.3s, transform 0.2s; /* Animatie voor hover */
 }
 
 .connectButton {
-    background-color: #24af37;
+    background-color: #007bff; /* Blauw */
 }
 
 .disconnectButton {
-    background-color: #d13a30;
+    background-color: #dc3545; /* Rood */
+}
+
+button:hover {
+    transform: scale(1.05); /* Vergroot de knop bij hover */
 }
 
 p {
     font-size: 1.2rem;
+    color: #333; /* Donkergrijs voor tekst */
+}
+
+#bleState {
+    font-weight: bold;
 }
