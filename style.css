@@ -49,7 +49,6 @@ body {
     position: absolute; /* Maak het absoluut gepositioneerd */
     top: 0; /* Plaats het bovenaan */
     left: 0; /* Plaats het aan de linkerkant */
-    transform: rotate(45deg); /* Draai de achtergrond 45 graden met de klok mee */
     z-index: 0; /* Zorg ervoor dat het achter de tekst staat */
 }
 
