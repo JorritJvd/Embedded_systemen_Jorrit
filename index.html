@@ -17,8 +17,11 @@
             <p>BLE Status: <strong><span id="bleState" style="color:#d13a30;">Niet verbonden</span></strong></p>
             <h2>Gemeten afstand</h2>
             <div class="value-background">
-                <p><span id="valueContainer">0</span> cm</p>
-                <p>Laatste meting: <span id="timestamp"></span></p>
+                <div class="ruler-background"></div> <!-- Nieuwe div voor de achtergrondafbeelding -->
+                <div class="text-container"> <!-- Nieuwe div voor de tekst -->
+                    <p><span id="valueContainer">0</span> cm</p>
+                    <p>Laatste meting: <span id="timestamp"></span></p>
+                </div>
             </div>
         </div>
     </div>

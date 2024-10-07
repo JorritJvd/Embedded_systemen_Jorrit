@@ -6,7 +6,7 @@ html {
 
 h1 {
     font-size: 2rem;
-    color: #050505;
+    color: #ffffff;
     margin-bottom: 20px;
 }
 
@@ -35,16 +35,31 @@ body {
 }
 
 .value-background {
-    background-image: url('ruler.png'); /* Achtergrondafbeelding van de meetlat */
-    background-size: cover; /* Zorg ervoor dat de afbeelding de container bedekt */
-    padding: 20px; /* Ruimte rondom de tekst */
-    border-radius: 4px; /* Ronde hoeken voor de achtergrond */
-    margin: 10px 0; /* Ruimte boven en onder */
-    color: #333; /* Donkergrijs voor tekst */
-    transform: rotate(45deg); /* Draai de achtergrond 45 graden met de klok mee */
+    position: relative; /* Voor positionering van de achtergrond */
     display: inline-block; /* Zorg ervoor dat de achtergrond goed wordt weergegeven */
     width: 100%; /* Zorg ervoor dat het de volledige breedte van de container gebruikt */
     height: auto; /* Automatische hoogte */
+}
+
+.ruler-background {
+    background-image: url('ruler.png'); /* Achtergrondafbeelding van de meetlat */
+    background-size: cover; /* Zorg ervoor dat de afbeelding de container bedekt */
+    width: 100%; /* Volledige breedte */
+    height: 100px; /* Pas de hoogte aan naar wens */
+    position: absolute; /* Maak het absoluut gepositioneerd */
+    top: 0; /* Plaats het bovenaan */
+    left: 0; /* Plaats het aan de linkerkant */
+    transform: rotate(45deg); /* Draai de achtergrond 45 graden met de klok mee */
+    z-index: 0; /* Zorg ervoor dat het achter de tekst staat */
+}
+
+.text-container {
+    position: relative; /* Zorg ervoor dat de tekst boven de achtergrond staat */
+    z-index: 1; /* Zorg ervoor dat de tekst boven de achtergrond staat */
+    padding: 20px; /* Ruimte rondom de tekst */
+    color: #333; /* Donkergrijs voor tekst */
+    background-color: rgba(255, 255, 255, 0.8); /* Witte achtergrond met transparantie voor leesbaarheid */
+    border-radius: 4px; /* Ronde hoeken voor de achtergrond */
 }
 
 button {
